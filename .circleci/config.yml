@@ -78,14 +78,9 @@ jobs:
         - run:
             name: Push
             command: |              
-              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --load
+              TAG=${BUILD_TAG}-${PLATFORM} docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
-              export BUILT_TAG=$(docker images | awk '{print $2}' | awk 'NR==2')
-              export TARGET_TAG=${BUILD_TAG}-<< parameters.target >>
-              docker tag ${IMAGE}:${BUILT_TAG} ${IMAGE}:${TARGET_TAG}
-              docker push ${IMAGE}:${TARGET_TAG}
-              # Append the pushed image name to the environment variable PUSHED_IMAGES
-              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TARGET_TAG}\"" >> $BASH_ENV
+              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> $BASH_ENV
     link:
       docker:
         - image: docker
