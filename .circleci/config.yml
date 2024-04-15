@@ -39,11 +39,34 @@ jobs:
             name: Build
             command: |
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
+    push:
+      parameters:
+        platform:
+          type: executor
+        target:
+          type: string
+      executor: << parameters.platform >>
+      steps:
+        - checkout
+        - configure-ghcr
+        - setup_remote_docker
+        - run:
+            name: Build
+            command: |
+              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
 workflows:
   build-all:
     jobs:
       - build:
           context: ghcr-token
+          matrix:
+            parameters:
+              platform: [amd64, arm64]
+              target: [proxy, server]
+      - push:
+          context: ghcr-token
+          requires:
+            - build
           matrix:
             parameters:
               platform: [amd64, arm64]
