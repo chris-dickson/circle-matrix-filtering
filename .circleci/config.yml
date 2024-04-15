@@ -80,7 +80,9 @@ jobs:
         - run:
             name: Push
             command: |              
-              TAG=${BUILD_TAG}-${EXECUTOR} docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
+              TAG=${BUILD_TAG}-${EXECUTOR} 
+              echo "Pushing image with tag ${TAG}"
+              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> $BASH_ENV
     link:
