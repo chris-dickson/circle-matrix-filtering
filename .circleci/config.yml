@@ -95,7 +95,7 @@ jobs:
         - persist_to_workspace:
             root: /tmp/workspace
             paths:
-              - /tmp/workspace/pushed_images.env
+              - pushed_images.env
     link:
       docker:
         - image: docker
