@@ -1,5 +1,13 @@
 version: 2.1
 
+parameters:
+  targets:
+    type: enum
+    default: [proxy, server]
+  platforms:
+    type: enum
+    default: [amd64, arm64]
+
 executors:
   amd64: # Docker using the Base Convenience Image
     docker:
@@ -79,9 +87,9 @@ jobs:
             name: Push
             command: |
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --load
-              export IMAGE=${docker images | awk '{print $1}' | awk 'NR==2'}
-              export BUILT_TAG=${docker images | awk '{print $2}' | awk 'NR==2'}
-              export TARGET_TAG=${BUILD_TAG}-${PLATFORM}
+              export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
+              export BUILT_TAG=$(docker images | awk '{print $2}' | awk 'NR==2')
+              export TARGET_TAG=${BUILD_TAG}-<< parameters.target >>
               docker tag ${IMAGE}:${BUILT_TAG} ${IMAGE}:${TARGET_TAG}
               docker push ${IMAGE}:${TARGET_TAG}
 workflows:
@@ -91,15 +99,15 @@ workflows:
           context: ghcr-token
           matrix:
             parameters:
-              platform: [amd64, arm64]
-              target: [proxy, server]
+              platform: << pipeline.parameters.platforms >>
+              target: << pipeline.parameters.targets >>
       - push:
           context: ghcr-token
           requires:
             - build
           matrix:
             parameters:
-              platform: [amd64, arm64]
-              target: [proxy, server]
+              platform: << pipeline.parameters.platforms >>
+              target: << pipeline.parameters.targets >>
 
 
