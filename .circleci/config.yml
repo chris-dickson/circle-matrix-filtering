@@ -13,8 +13,6 @@ commands:
   configure-ghcr:
     description: Configure GHCR access
     steps:
-      - configure-ghcr
-      - setup_remote_docker
       - run:
           name: Configure GHCR
           command: |
@@ -32,6 +30,7 @@ jobs:
       steps:
         - checkout
         - configure-ghcr
+        - setup_remote_docker
         - run:
             name: Build
             command: |
