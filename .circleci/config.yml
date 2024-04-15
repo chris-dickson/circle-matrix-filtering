@@ -24,6 +24,8 @@ jobs:
       parameters:
         platform:
           type: executor
+        target:
+          type: string
       executor: << parameters.platform >>
       steps:
         - checkout
