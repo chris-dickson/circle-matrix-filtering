@@ -4,9 +4,11 @@ parameters:
   targets:
     type: enum
     enum: [ "proxy", "server" ]
+    default: "proxy"
   platforms:
     type: enum
     enum: [ "amd64", "arm64" ]
+    default: "amd64"
 
 executors:
   amd64: # Docker using the Base Convenience Image
