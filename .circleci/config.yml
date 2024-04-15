@@ -5,8 +5,8 @@ executors:
     docker:
       - image: docker
   arm64: # a Linux VM running Ubuntu 20.04
-    machine:
-      image: ubuntu-2204:2024.01.2
+    docker:
+      - image: docker
     resource_class: arm.medium
 
 commands:
@@ -44,4 +44,5 @@ workflows:
             parameters:
               platform: [amd64, arm64]
               target: [proxy, server]
+
 
