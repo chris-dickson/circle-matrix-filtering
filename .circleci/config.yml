@@ -4,10 +4,14 @@ executors:
   amd64: # Docker using the Base Convenience Image
     docker:
       - image: docker
+    environment:
+      PLATFORM: "linux/amd64"
   arm64: # a Linux VM running Ubuntu 20.04
     docker:
       - image: docker
     resource_class: arm.medium
+    environment:
+      PLATFORM: "linux/arm64"
 
 commands:
   configure-ghcr:
@@ -34,7 +38,7 @@ jobs:
         - run:
             name: Build
             command: |
-              docker buildx bake --set _platforms.platform=linux/<< parameters.platform >> << parameters.target >>
+              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
 workflows:
   build-all:
     jobs:
