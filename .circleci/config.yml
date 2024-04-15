@@ -6,12 +6,14 @@ executors:
       - image: docker
     environment:
       PLATFORM: "linux/amd64"
+      EXECUTOR: "amd64"
   arm64: # a Linux VM running Ubuntu 20.04
     docker:
       - image: docker
     resource_class: arm.medium
     environment:
       PLATFORM: "linux/arm64"
+      EXECUTOR: "arm64"
 
 commands:
   configure-ghcr:
@@ -78,7 +80,7 @@ jobs:
         - run:
             name: Push
             command: |              
-              TAG=${BUILD_TAG}-${PLATFORM} docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
+              TAG=${BUILD_TAG}-${EXECUTOR} docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> $BASH_ENV
     link:
