@@ -1,4 +1,14 @@
 version: 2.1
+
+executors:
+  linux/amd64: # Docker using the Base Convenience Image
+    docker:
+      - image: docker
+  linux/arm64: # a Linux VM running Ubuntu 20.04
+    machine:
+      image: ubuntu-2204:2024.01.2
+    resource_class: arm.medium
+
 commands:
   configure-ghcr:
     description: Configure GHCR access
@@ -11,21 +21,24 @@ commands:
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USER --password-stdin
 jobs:
     build:
-        docker:
-        - image: docker
-        steps:
+      parameters:
+        platform:
+          type: executor
+      executor: << parameters.platform >>
+      steps:
         - checkout
         - configure-ghcr
-        - setup_remote_docker
         - run:
-            name: Build and push images
+            name: Build
             command: |
-                docker build -t ghcr.io/chris-dickson/circle-test-proxy proxy
-                docker build -t ghcr.io/chris-dickson/circle-test-server server
-                docker push ghcr.io/chris-dickson/circle-test-proxy
-                docker push ghcr.io/chris-dickson/circle-test-server
+              docker buildx bake --set _platforms.platform=<< parameters.platform >> << parameters.target >>
 workflows:
-  build:
+  build-all:
     jobs:
       - build:
           context: ghcr-token
+          matrix:
+            parameters:
+              platform: [linux/amd64, linux/arm64]
+              target: [proxy, server]
+
