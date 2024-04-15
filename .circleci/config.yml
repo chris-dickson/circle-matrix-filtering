@@ -84,8 +84,8 @@ jobs:
               TAG=${BUILD_TAG}-${CIRCLE_TAG:-latest} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
-              FILE=<< parameters.target >>_${EXECUTOR}.env
-              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> /tmp/workspace/${FILE}
+              FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}.env
+              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> ${FILE}
               cat $FILE
 
         - persist_to_workspace:
