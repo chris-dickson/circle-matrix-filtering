@@ -1,0 +1,30 @@
+version: 2.1
+commands:
+  configure-ghcr:
+    description: Configure GHCR access
+    steps:
+      - run:
+          name: Configure GHCR
+          command: |
+            [ -z "$GHCR_TOKEN" ] && exit 0
+            [ -z "$GHCR_USER" ] && exit 0
+            echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USER --password-stdin
+jobs:
+    build:
+        docker:
+        - image: cimg/base:2021.05
+        steps:
+        - checkout
+        - configure-ghcr
+        - run:
+            name: Build and push images
+            command: |
+                docker build -t ghcr.io/chris-dickson/circle-test-proxy proxy
+                docker build -t ghcr.io/chris-dickson/circle-test-server server
+                docker push ghcr.io/chris-dickson/circle-test-proxy
+                docker push ghcr.io/chris-dickson/circle-test-server
+workflows:
+  build:
+    jobs:
+      - build:
+          context: ghcr-token
