@@ -1,15 +1,5 @@
 version: 2.1
 
-parameters:
-  targets:
-    type: enum
-    enum: [ "proxy", "server" ]
-    default: "proxy"
-  platforms:
-    type: enum
-    enum: [ "amd64", "arm64" ]
-    default: "amd64"
-
 executors:
   amd64: # Docker using the Base Convenience Image
     docker:
@@ -87,13 +77,30 @@ jobs:
         - setup_remote_docker
         - run:
             name: Push
-            command: |
+            command: |              
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --load
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               export BUILT_TAG=$(docker images | awk '{print $2}' | awk 'NR==2')
               export TARGET_TAG=${BUILD_TAG}-<< parameters.target >>
               docker tag ${IMAGE}:${BUILT_TAG} ${IMAGE}:${TARGET_TAG}
               docker push ${IMAGE}:${TARGET_TAG}
+              # Append the pushed image name to the environment variable PUSHED_IMAGES
+              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TARGET_TAG}\"" >> $BASH_ENV
+    link:
+      docker:
+        - image: docker
+      steps:
+        - checkout
+        - configure-ghcr
+        - compute-build-tag
+        - run:
+            name: Link
+            command: |
+              echo "Linking images"
+              for image in ${PUSHED_IMAGES}; do
+                echo "Linking ${image}"
+              done
+
 workflows:
   build-all:
     jobs:
@@ -101,15 +108,21 @@ workflows:
           context: ghcr-token
           matrix:
             parameters:
-              platform: << pipeline.parameters.platforms >>
-              target: << pipeline.parameters.targets >>
+              platform: [amd64, arm64]
+              target: [proxy, server]
       - push:
           context: ghcr-token
           requires:
             - build
           matrix:
             parameters:
-              platform: << pipeline.parameters.platforms >>
-              target: << pipeline.parameters.targets >>
+              platform: [amd64, arm64]
+              target: [proxy, server]
+      - link:
+          context: ghcr-token
+          requires:
+            - push
+
+
 
 
