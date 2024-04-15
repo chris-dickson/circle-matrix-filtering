@@ -23,6 +23,30 @@ commands:
             [ -z "$GHCR_TOKEN" ] && exit 0
             [ -z "$GHCR_USER" ] && exit 0
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USER --password-stdin
+  compute-build-tag:
+    description: Compute the build tag from the branch
+    steps:
+      - run:
+          name: Compute the build tag from the branch
+          command: |
+            echo "The branch is ${CIRCLE_BRANCH}"
+            RELEASE_REGEX="^release\/.*"
+
+            BUILD_TAG="unpushed"
+            if [[ ${CIRCLE_BRANCH} =~ ${RELEASE_REGEX} ]]; then
+              BUILD_TAG=${CIRCLE_BRANCH//release\//}
+            elif [ ${CIRCLE_BRANCH} == "main" ]; then
+              BUILD_TAG="latest"
+            fi
+
+            if [ "${BUILD_TAG}" == "unpushed" ]; then
+              echo "Building feature or bugfix branch. Docker containers will not be pushed."
+            else
+              echo "The build tag is ${BUILD_TAG}"
+            fi
+
+            echo "export BUILD_TAG=${BUILD_TAG}" >> $BASH_ENV
+            source $BASH_ENV
 jobs:
     build:
       parameters:
@@ -37,7 +61,7 @@ jobs:
         - setup_remote_docker
         - run:
             name: Build
-            command: |
+            command: |              
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
     push:
       parameters:
@@ -49,11 +73,17 @@ jobs:
       steps:
         - checkout
         - configure-ghcr
+        - compute-build-tag
         - setup_remote_docker
         - run:
-            name: Build
+            name: Push
             command: |
-              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
+              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --load
+              export IMAGE=${docker images | awk '{print $1}' | awk 'NR==2'}
+              export BUILT_TAG=${docker images | awk '{print $2}' | awk 'NR==2'}
+              export TARGET_TAG=${BUILD_TAG}-${PLATFORM}
+              docker tag ${IMAGE}:${BUILT_TAG} ${IMAGE}:${TARGET_TAG}
+              docker push ${IMAGE}:${TARGET_TAG}
 workflows:
   build-all:
     jobs:
