@@ -1,10 +1,10 @@
 version: 2.1
 
 executors:
-  linux/amd64: # Docker using the Base Convenience Image
+  "linux/amd64": # Docker using the Base Convenience Image
     docker:
       - image: docker
-  linux/arm64: # a Linux VM running Ubuntu 20.04
+  "linux/arm64": # a Linux VM running Ubuntu 20.04
     machine:
       image: ubuntu-2204:2024.01.2
     resource_class: arm.medium
