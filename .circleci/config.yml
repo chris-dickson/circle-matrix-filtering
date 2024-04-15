@@ -2,10 +2,10 @@ version: 2.1
 
 parameters:
   targets:
-    type: enum
+    type: string
     default: [proxy, server]
   platforms:
-    type: enum
+    type: string
     default: [amd64, arm64]
 
 executors:
