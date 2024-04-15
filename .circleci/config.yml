@@ -80,23 +80,15 @@ jobs:
         - run: mkdir -p /tmp/workspace
         - run:
             name: Push
-            command: |
-              RELEASE_REGEX="^release\/.*"
-              BUILD_TAG="unpushed"
-              if [[ ${CIRCLE_BRANCH} =~ ${RELEASE_REGEX} ]]; then
-                BUILD_TAG=${CIRCLE_BRANCH//release\//}
-              elif [ ${CIRCLE_BRANCH} == "main" ]; then
-                BUILD_TAG="latest"
-              fi
-              
-              TAG=${BUILD_TAG}-${EXECUTOR} 
+            command: |              
+              TAG=${BUILD_TAG}-${CIRCLE_TAG:-latest} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
-              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> /tmp/workspace/pushed_images.env
+              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> /tmp/workspace/<< parameters.target >>_${EXECUTOR}.env
         - persist_to_workspace:
             root: /tmp/workspace
             paths:
-              - pushed_images.env
+              - << parameters.target >>_${EXECUTOR}.env
     link:
       docker:
         - image: docker
@@ -109,7 +101,7 @@ jobs:
             name: Link
             command: |
               echo "Linking images"
-              source pushed_images.env
+              source *.env
               for image in ${PUSHED_IMAGES}; do
                 echo "Linking ${image}"
               done
