@@ -12,10 +12,11 @@ commands:
 jobs:
     build:
         docker:
-        - image: cimg/base:2021.05
+        - image: docker
         steps:
         - checkout
         - configure-ghcr
+        - setup_remote_docker
         - run:
             name: Build and push images
             command: |
