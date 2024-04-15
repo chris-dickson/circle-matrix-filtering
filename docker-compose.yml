@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  proxy:
+    image: ghcr.io/chris-dickson/circle-test-proxy
+    ports:
+      - "3000:80"
+  server:
+    image: ghcr.io/chris-dickson/circle-test-server
