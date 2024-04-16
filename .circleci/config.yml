@@ -25,30 +25,6 @@ commands:
             [ -z "$GHCR_TOKEN" ] && exit 0
             [ -z "$GHCR_USER" ] && exit 0
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USER --password-stdin
-  compute-build-tag:
-    description: Compute the build tag from the branch
-    steps:
-      - run:
-          name: Compute the build tag from the branch
-          command: |
-            echo "The branch is ${CIRCLE_BRANCH}"
-            RELEASE_REGEX="^release\/.*"
-
-            BUILD_TAG="unpushed"
-            if [[ ${CIRCLE_BRANCH} =~ ${RELEASE_REGEX} ]]; then
-              BUILD_TAG=${CIRCLE_BRANCH//release\//}
-            elif [ ${CIRCLE_BRANCH} == "main" ]; then
-              BUILD_TAG="latest"
-            fi
-
-            if [ "${BUILD_TAG}" == "unpushed" ]; then
-              echo "Building feature or bugfix branch. Docker containers will not be pushed."
-            else
-              echo "The build tag is ${BUILD_TAG}"
-            fi
-
-            echo "export BUILD_TAG=${BUILD_TAG}" >> $BASH_ENV
-            source $BASH_ENV
 jobs:
     build:
       parameters:
@@ -75,7 +51,6 @@ jobs:
       steps:
         - checkout
         - configure-ghcr
-        - compute-build-tag
         - setup_remote_docker
         - run: mkdir -p /tmp/workspace
         - run:
@@ -84,9 +59,8 @@ jobs:
               TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
-              FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}.env
-              echo "export PUSHED_IMAGES=\"${PUSHED_IMAGES} ${IMAGE}:${TAG}\"" >> ${FILE}
-              cat $FILE
+              FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}
+              echo $IMAGE > ${FILE}
 
         - persist_to_workspace:
             root: /tmp/workspace
@@ -103,12 +77,24 @@ jobs:
         - run:
             name: Link
             command: |
-              echo "Linking images"
-              source /tmp/workspace/*.env
-              for image in ${PUSHED_IMAGES}; do
-                echo "Linking ${image}"
+              dir=/tmp/workspace
+              for amd64_file in "$dir"/*_amd64; do
+                # Extract the filename from the full path
+                amd64_filename=$(basename "$amd64_file")
+                
+                # Extract the prefix from the filename
+                prefix=$(basename "$amd64_filename" _amd64)
+                
+                # Check if corresponding arm64 file exists
+                arm64_file="${amd64_file%_amd64}_arm64"
+                if [[ -f "$arm64_file" ]]; then
+                  # Extract the filename from the full path
+                  arm64_filename=$(basename "$arm64_file")
+                  
+                  # Run the link command with the prefix argument
+                  echo "$prefix" "$amd64_filename" "$arm64_filename"
+                fi
               done
-
 workflows:
   build-all:
     jobs:
