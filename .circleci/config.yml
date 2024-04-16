@@ -56,7 +56,7 @@ jobs:
         - run:
             name: Push
             command: |              
-              TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
+              export TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}
