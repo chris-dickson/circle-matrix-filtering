@@ -60,7 +60,13 @@ jobs:
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}
-              echo $IMAGE > ${FILE}
+              
+              # write the target image
+              echo $IMAGE:${CIRCLE_TAG:-latest} > ${FILE}
+              
+              # write the source image
+              echo $IMAGE:${TAG} >> ${FILE}
+              
 
         - persist_to_workspace:
             root: /tmp/workspace
