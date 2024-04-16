@@ -81,7 +81,7 @@ jobs:
         - run:
             name: Push
             command: |              
-              TAG=${BUILD_TAG}-${CIRCLE_TAG:-latest} 
+              TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
               FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}.env
@@ -91,7 +91,7 @@ jobs:
         - persist_to_workspace:
             root: /tmp/workspace
             paths:
-              - << parameters.target >>_${EXECUTOR}.env
+              - "*.env"
     link:
       docker:
         - image: docker
