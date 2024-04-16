@@ -128,10 +128,20 @@ workflows:
             parameters:
               platform: [amd64, arm64]
               target: [proxy, server]
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /.*/
       - link:
           context: ghcr-token
           requires:
             - push
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /.*/
 
 
 
