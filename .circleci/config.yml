@@ -91,7 +91,7 @@ jobs:
         - persist_to_workspace:
             root: /tmp/workspace
             paths:
-              - "*.env"
+              - << parameters.target >>_${EXECUTOR}.env
     link:
       docker:
         - image: docker
