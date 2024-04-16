@@ -96,9 +96,18 @@ jobs:
                 if [[ -f "$arm64_file" ]]; then
                   # Extract the filename from the full path
                   arm64_filename=$(basename "$arm64_file")
-                  
-                  # Run the link command with the prefix argument
-                  echo "$prefix" "$amd64_filename" "$arm64_filename"
+              
+                  # cat the amd file and save the first line as the image name
+                  image_name=$(cat "$amd64_file" | head -n 1)
+              
+                  # cat the amd file and save the second line as one of the aliases
+                  amd_image=$(cat "$amd64_file" | tail -n 1)
+              
+                  # cat the arm file and save the second line as one of the aliases
+                  arm_image=$(cat "$arm64_file" | tail -n 1)
+              
+                  # Run the tag command
+                  docker buildx imagetools create --dry-run -t "$image_name" "$amd_image" "$arm_image"
                 fi
               done
 workflows:
