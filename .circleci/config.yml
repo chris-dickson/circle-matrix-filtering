@@ -104,7 +104,7 @@ jobs:
             name: Link
             command: |
               echo "Linking images"
-              source *.env
+              source /tmp/workspace/*.env
               for image in ${PUSHED_IMAGES}; do
                 echo "Linking ${image}"
               done
