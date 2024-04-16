@@ -107,6 +107,7 @@ jobs:
                   arm_image=$(cat "$arm64_file" | tail -n 1)
               
                   # Run the tag command
+                  echo "Linking $image_name with $amd_image and $arm_image"
                   docker buildx imagetools create --dry-run -t "$image_name" "$amd_image" "$arm_image"
                 fi
               done
@@ -118,7 +119,7 @@ workflows:
           matrix:
             parameters:
               platform: [amd64, arm64]
-              target: [proxy]
+              target: [proxy, server]
       - push:
           context: ghcr-token
           requires:
@@ -126,7 +127,7 @@ workflows:
           matrix:
             parameters:
               platform: [amd64, arm64]
-              target: [proxy]
+              target: [proxy, server]
       - link:
           context: ghcr-token
           requires:
