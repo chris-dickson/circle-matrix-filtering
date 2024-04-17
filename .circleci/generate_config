@@ -15,17 +15,25 @@
         return regex.test(str);
     }
 
-    const changedFiles = getChangedFiles();
     const buildTargets = [];
-    for (const target of TARGETS) {
-        for (const glob of target.paths) {
-            for (const changedFile of changedFiles) {
-                if (matchesGlob(changedFile, glob)) {
-                    buildTargets.push(target.target);
-                    break;
+    if (process.env.CIRCLE_BRANCH === 'main' || process.env.CIRCLE_TAG) {
+        buildTargets.push(TARGETS.map(target => target.target));
+    } else {
+        const changedFiles = getChangedFiles();
+        for (const target of TARGETS) {
+            for (const glob of target.paths) {
+                for (const changedFile of changedFiles) {
+                    if (matchesGlob(changedFile, glob)) {
+                        buildTargets.push(target.target);
+                        break;
+                    }
                 }
             }
         }
+    }
+
+    if (buildTargets.length === 0) {
+        buildTargets.push('null');
     }
 
     // replace %%TARGETS%% in the build_config_template.yml with the buildTargets using fs
