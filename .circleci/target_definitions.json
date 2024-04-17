@@ -1,0 +1,18 @@
+[
+  {
+    "target": "server",
+    "paths": [
+      "server/**",
+      ".circleci/**",
+      "docker-bake.hcl"
+    ]
+  },
+  {
+    "target": "proxy",
+    "paths": [
+      "proxy/**",
+      ".circleci/**",
+      "docker-bake.hcl"
+    ]
+  }
+]

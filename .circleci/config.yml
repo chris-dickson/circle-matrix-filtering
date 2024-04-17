@@ -1,148 +1,26 @@
 version: 2.1
 
-executors:
-  amd64: # Docker using the Base Convenience Image
-    docker:
-      - image: docker
-    environment:
-      PLATFORM: "linux/amd64"
-      EXECUTOR: "amd64"
-  arm64: # a Linux VM running Ubuntu 20.04
-    docker:
-      - image: docker
-    resource_class: arm.medium
-    environment:
-      PLATFORM: "linux/arm64"
-      EXECUTOR: "arm64"
+setup: true
 
-commands:
-  configure-ghcr:
-    description: Configure GHCR access
-    steps:
-      - run:
-          name: Configure GHCR
-          command: |
-            [ -z "$GHCR_TOKEN" ] && exit 0
-            [ -z "$GHCR_USER" ] && exit 0
-            echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USER --password-stdin
+orbs:
+  continuation: circleci/continuation@0.1.2
+  node: circleci/node@5.2.0
+
 jobs:
-    build:
-      parameters:
-        platform:
-          type: executor
-        target:
-          type: string
-      executor: << parameters.platform >>
-      steps:
-        - checkout
-        - configure-ghcr
-        - setup_remote_docker
-        - run:
-            name: Build
-            command: |              
-              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
-    push:
-      parameters:
-        platform:
-          type: executor
-        target:
-          type: string
-      executor: << parameters.platform >>
-      steps:
-        - checkout
-        - configure-ghcr
-        - setup_remote_docker
-        - run: mkdir -p /tmp/workspace
-        - run:
-            name: Push
-            command: |
-              export TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
-              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
-              export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
-              FILE=/tmp/workspace/<< parameters.target >>_${EXECUTOR}
-              
-              # write the target image
-              echo $IMAGE:${CIRCLE_TAG:-latest} > ${FILE}
-              
-              # write the source image
-              echo $IMAGE:${TAG} >> ${FILE}
-              
-
-        - persist_to_workspace:
-            root: /tmp/workspace
-            paths:
-              - .
-    link:
-      docker:
-        - image: docker
-      steps:
-        - checkout
-        - configure-ghcr
-        - attach_workspace:
-            at: /tmp/workspace
-        - run:
-            name: Link
-            command: |
-              dir=/tmp/workspace
-              for amd64_file in "$dir"/*_amd64; do
-                # Extract the filename from the full path
-                amd64_filename=$(basename "$amd64_file")
-                
-                # Extract the prefix from the filename
-                prefix=$(basename "$amd64_filename" _amd64)
-                
-                # Check if corresponding arm64 file exists
-                arm64_file="${amd64_file%_amd64}_arm64"
-                if [[ -f "$arm64_file" ]]; then
-                  # Extract the filename from the full path
-                  arm64_filename=$(basename "$arm64_file")
-              
-                  # cat the amd file and save the first line as the image name
-                  image_name=$(cat "$amd64_file" | head -n 1)
-              
-                  # cat the amd file and save the second line as one of the aliases
-                  amd_image=$(cat "$amd64_file" | tail -n 1)
-              
-                  # cat the arm file and save the second line as one of the aliases
-                  arm_image=$(cat "$arm64_file" | tail -n 1)
-              
-                  # Run the tag command
-                  echo "Linking $image_name with $amd_image and $arm_image"
-                  docker buildx imagetools create -t "$image_name" "$amd_image" "$arm_image"
-                fi
-              done
+  setup:
+    executor: continuation/default
+    steps:
+      - checkout
+      - node/install:
+          node-version: '20.11.1'
+      - run:
+          name: Generate config
+          command: |
+            cd .circleci
+            ./generate_config
+      - continuation/continue:
+          configuration_path: .circleci/build_config.yml
 workflows:
-  build-all:
+  setup:
     jobs:
-      - build:
-          context: ghcr-token
-          matrix:
-            parameters:
-              platform: [amd64, arm64]
-              target: [proxy, server]
-      - push:
-          context: ghcr-token
-          requires:
-            - build
-          matrix:
-            parameters:
-              platform: [amd64, arm64]
-              target: [proxy, server]
-          filters:
-            branches:
-              only: main
-            tags:
-              only: /.*/
-      - link:
-          context: ghcr-token
-          requires:
-            - push
-          filters:
-            branches:
-              only: main
-            tags:
-              only: /.*/
-
-
-
-
+      - setup
