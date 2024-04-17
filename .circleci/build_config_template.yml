@@ -118,8 +118,8 @@ workflows:
           context: ghcr-token
           matrix:
             parameters:
-              platform: [amd64, arm64]
-              target: [proxy, server]
+              platform: [amd64]
+              target: [%%TARGETS%%]
       - push:
           context: ghcr-token
           requires:
@@ -127,7 +127,7 @@ workflows:
           matrix:
             parameters:
               platform: [amd64, arm64]
-              target: [proxy, server]
+              target: [%%TARGETS%%]
           filters:
             branches:
               only: main

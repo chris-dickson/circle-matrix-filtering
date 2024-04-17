@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+(() => {
+    const TARGETS = require('./target_definitions.json');
+    const { execSync } = require('child_process');
+    const fs = require('fs');
+
+    function getChangedFiles() {
+        const diff = execSync('git status --porcelain | awk \'{print $2}\'', {encoding: 'utf8'});
+        return diff.split('\n').filter(Boolean);
+    }
+
+    function matchesGlob(str, glob) {
+        const regex = new RegExp('^' + glob.split('*').join('.*') + '$');
+        return regex.test(str);
+    }
+
+    const changedFiles = getChangedFiles();
+    const buildTargets = [];
+    for (const target of TARGETS) {
+        for (const glob of target.paths) {
+            for (const changedFile of changedFiles) {
+                if (matchesGlob(changedFile, glob)) {
+                    buildTargets.push(target.target);
+                    break;
+                }
+            }
+        }
+    }
+
+    // replace %%TARGETS%% in the build_config_template.yml with the buildTargets using fs
+    const buildConfig = fs.readFileSync('build_config_template.yml', 'utf8');
+    const newBuildConfig = buildConfig.replaceAll('%%TARGETS%%', buildTargets.join(' '));
+    fs.writeFileSync('build_config.yml', newBuildConfig);
+})();
