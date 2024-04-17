@@ -8,6 +8,7 @@ orbs:
 jobs:
   setup:
     executor: continuation/default
+    working_directory: ~/project/.circleci
     steps:
       - checkout # checkout code
       - run: # run a command
