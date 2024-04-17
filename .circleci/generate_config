@@ -5,7 +5,8 @@
     const fs = require('fs');
 
     function getChangedFiles() {
-        const diff = execSync('git status --porcelain | awk \'{print $2}\'', {encoding: 'utf8'});
+        const command = process.env.CI ? 'git diff --name-status main | awk \'{print $2}\'' : 'git status --porcelain | awk \'{print $2}\'';
+        const diff = execSync(command, {encoding: 'utf8'});
         return diff.split('\n').filter(Boolean);
     }
 
@@ -29,6 +30,6 @@
 
     // replace %%TARGETS%% in the build_config_template.yml with the buildTargets using fs
     const buildConfig = fs.readFileSync('build_config_template.yml', 'utf8');
-    const newBuildConfig = buildConfig.replaceAll('%%TARGETS%%', buildTargets.join(' '));
+    const newBuildConfig = buildConfig.replaceAll('%%TARGETS%%', buildTargets.join(', '));
     fs.writeFileSync('build_config.yml', newBuildConfig);
 })();
