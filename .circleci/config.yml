@@ -17,7 +17,7 @@ jobs:
           name: Generate config
           command: |
             cd .circleci
-            ./generate-config
+            ./generate_config
       - continuation/continue:
           configuration_path: build_config.yml
 workflows:
