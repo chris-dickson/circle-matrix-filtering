@@ -27,6 +27,7 @@ commands:
         description: The branch to compare against when looking for changing.
         type: string
       paths:
+        default: ''
         description: The paths to look for changes in.
         type: string
     steps:
