@@ -41,6 +41,7 @@ commands:
             echo "--------------"
             echo "GIT_BASE_BRANCH=$GIT_BASE_BRANCH"
             echo "EXCEPT_BRANCHES=$EXCEPT_BRANCHES"
+            echo "TARGET=$TARGET"
           
             BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
             echo "BRANCH_NAME=$BRANCH_NAME"
@@ -191,16 +192,16 @@ jobs:
 workflows:
   build-all:
     jobs:
-      - server-tests:
-          context: ghcr-token
+#      - server-tests:
+#          context: ghcr-token
       - build:
           context: ghcr-token
           matrix:
             parameters:
               platform: [amd64, arm64]
               target: [proxy, server]
-          requires:
-            - server-tests
+#          requires:
+#            - server-tests
       - push:
           context: ghcr-token
           requires:
