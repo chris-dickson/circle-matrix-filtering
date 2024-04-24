@@ -118,7 +118,7 @@ jobs:
         - run:
             name: Build
             command: |              
-              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
+              docker buildx bake --set _platforms.platform=${PLATFORM} ${TARGET}
     push:
       parameters:
         platform:
