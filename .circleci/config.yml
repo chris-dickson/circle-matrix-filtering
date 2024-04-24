@@ -41,7 +41,6 @@ commands:
             BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
             echo "BRANCH_NAME=$BRANCH_NAME"
             
-            TARGET= << parameters.target >>
             if [[ -n $TARGET ]]; then
               PATHS=$(jq -r ".${TARGET}" .circleci/target-paths.json)
             fi
