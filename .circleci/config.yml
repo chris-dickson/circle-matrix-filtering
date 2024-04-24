@@ -56,7 +56,8 @@ commands:
             }
             Skip
             # Export the function so it can be used in other steps
-            export -f Skip
+            echo "export -f Skip" >> "$BASH_ENV"
+            source "$BASH_ENV"
           environment:
             EXCEPT_BRANCHES: << parameters.except_branches >>
             GIT_BASE_BRANCH: << parameters.git_base_branch >>
