@@ -32,26 +32,31 @@ commands:
     steps:
       - run:
           command: |
-            echo "Skip debugging"
-            echo "--------------"
-            echo "GIT_BASE_BRANCH=$GIT_BASE_BRANCH"
-            echo "PATHS=$PATHS"
-            echo "EXCEPT_BRANCHES=$EXCEPT_BRANCHES"
-          
-            BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
-            echo "BRANCH_NAME=$BRANCH_NAME"
-          
-            IFS=' ' read -ra paths_arr \<<< "$PATHS"
-            echo "paths_arr=" "${paths_arr[@]}"
-          
-            CHANGED_FILES="$(git diff "$GIT_BASE_BRANCH"..."$(git symbolic-ref --short -q HEAD)" --name-only --diff-filter=ACMRT "${paths_arr[@]}")";
-            echo "CHANGED_FILES=$CHANGED_FILES"
-          
-            if [[ -n "$CIRCLE_TAG" ]] || [[ "$EXCEPT_BRANCHES" == *"${BRANCH_NAME}"* ]] || [ -n "${CHANGED_FILES}" ];
-            then
-                exit 0;
-            fi
-            circleci step halt;
+            Skip() {
+              echo "Skip debugging"
+              echo "--------------"
+              echo "GIT_BASE_BRANCH=$GIT_BASE_BRANCH"
+              echo "PATHS=$PATHS"
+              echo "EXCEPT_BRANCHES=$EXCEPT_BRANCHES"
+            
+              BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
+              echo "BRANCH_NAME=$BRANCH_NAME"
+            
+              IFS=' ' read -ra paths_arr \<<< "$PATHS"
+              echo "paths_arr=" "${paths_arr[@]}"
+            
+              CHANGED_FILES="$(git diff "$GIT_BASE_BRANCH"..."$(git symbolic-ref --short -q HEAD)" --name-only --diff-filter=ACMRT "${paths_arr[@]}")";
+              echo "CHANGED_FILES=$CHANGED_FILES"
+            
+              if [[ -n "$CIRCLE_TAG" ]] || [[ "$EXCEPT_BRANCHES" == *"${BRANCH_NAME}"* ]] || [ -n "${CHANGED_FILES}" ];
+              then
+                  exit 0;
+              fi
+              circleci step halt;
+            }
+            Skip
+            # Export the function so it can be used in other steps
+            export -f Skip
           environment:
             EXCEPT_BRANCHES: << parameters.except_branches >>
             GIT_BASE_BRANCH: << parameters.git_base_branch >>
