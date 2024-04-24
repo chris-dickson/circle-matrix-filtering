@@ -66,7 +66,8 @@ commands:
             EXCEPT_BRANCHES: << parameters.except_branches >>
             GIT_BASE_BRANCH: << parameters.git_base_branch >>
             PATHS: << parameters.paths >>
-          name: Skip if no changes to "<< parameters.paths >>"
+            TARGET: << parameters.target >>
+          name: Skip if no changes
   configure-ghcr:
     description: Configure GHCR access
     steps:
@@ -118,7 +119,7 @@ jobs:
         - run:
             name: Build
             command: |              
-              docker buildx bake --set _platforms.platform=${PLATFORM} ${TARGET}
+              docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
     push:
       parameters:
         platform:
