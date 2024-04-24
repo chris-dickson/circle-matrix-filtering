@@ -111,7 +111,8 @@ jobs:
         - run:
             name: Run Server Tests
             command: |
-              GRADLE_ARGS=$(cat server/src/test/java/classnames.txt | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+              cd server
+              GRADLE_ARGS=$(cat src/test/java/classnames.txt | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
               echo "Prepared arguments for Gradle: $GRADLE_ARGS"
               
               ./gradlew test $GRADLE_ARGS
