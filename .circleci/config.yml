@@ -3,13 +3,13 @@ version: 2.1
 executors:
   amd64: # Docker using the Base Convenience Image
     docker:
-      - image: docker
+      - image: cimg/base:current
     environment:
       PLATFORM: "linux/amd64"
       EXECUTOR: "amd64"
   arm64: # a Linux VM running Ubuntu 20.04
     docker:
-      - image: docker
+      - image: cimg/base:current
     resource_class: arm.medium
     environment:
       PLATFORM: "linux/arm64"
