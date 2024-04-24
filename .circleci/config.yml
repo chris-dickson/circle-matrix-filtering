@@ -30,6 +30,10 @@ commands:
         default: ''
         description: The paths to look for changes in.
         type: string
+      target:
+        default: ''
+        description: The target to look for changes in.
+        type: string
     steps:
       - run:
           command: |
