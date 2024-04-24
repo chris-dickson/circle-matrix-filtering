@@ -19,7 +19,7 @@ commands:
   skip_unchanged:
     parameters:
       except_branches:
-        default: master,main,production
+        default: main,HEAD
         description: Comma-separated list of git branches where we should never skip tests.
         type: string
       git_base_branch:
@@ -48,7 +48,7 @@ commands:
               CHANGED_FILES="$(git diff "$GIT_BASE_BRANCH"..."$(git symbolic-ref --short -q HEAD)" --name-only --diff-filter=ACMRT "${paths_arr[@]}")";
               echo "CHANGED_FILES=$CHANGED_FILES"
             
-              if [[ "$EXCEPT_BRANCHES" == *"${BRANCH_NAME}"* ]] || [ -n "${CHANGED_FILES}" ];
+              if [[ -n "$CIRCLE_TAG" ]] || [[ "$EXCEPT_BRANCHES" == *"${BRANCH_NAME}"* ]] || [ -n "${CHANGED_FILES}" ];
               then
                   exit 0;
               fi
@@ -91,6 +91,8 @@ jobs:
       working_directory: ~/project
       steps:
         - checkout
+        - skip_unchanged:
+            paths: server
         - configure-ghcr
         - install-java-21
         - run:
