@@ -101,7 +101,7 @@ jobs:
         - run:
             name: Run Server Tests
             command: |
-              cd server/test/java
+              cd server/src/test/java
               
               # Get list of classnames of tests that should run on this node.
               circleci tests glob "**/*.java" | cut -c 1- | sed 's@/@.@g' | sed 's/.\{5\}$//' | circleci tests run --command=">classnames.txt xargs echo" --verbose --split-by=timings --timings-type=classname
