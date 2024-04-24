@@ -204,16 +204,16 @@ jobs:
 workflows:
   build-all:
     jobs:
-#      - server-tests:
-#          context: ghcr-token
+      - server-tests:
+          context: ghcr-token
       - build:
           context: ghcr-token
           matrix:
             parameters:
               platform: [amd64, arm64]
               target: [proxy, server]
-#          requires:
-#            - server-tests
+          requires:
+            - server-tests
       - push:
           context: ghcr-token
           requires:
