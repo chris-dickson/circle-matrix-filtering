@@ -39,12 +39,7 @@ jobs:
         - setup_remote_docker
         - run:
             name: Build
-            command: |
-              if [ "<< parameters.target >>" = "null" ]; then
-                echo "No target specified, halting job"
-                circleci step halt;
-              fi
-              
+            command: |              
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >>
     push:
       parameters:
@@ -61,11 +56,6 @@ jobs:
         - run:
             name: Push
             command: |
-              if [ "<< parameters.target >>" = "null" ]; then
-                  echo "No target specified, halting job"
-                  circleci step halt;
-              fi
-              
               export TAG=${CIRCLE_TAG:-latest}-${EXECUTOR} 
               docker buildx bake --set _platforms.platform=${PLATFORM} << parameters.target >> --push
               export IMAGE=$(docker images | awk '{print $1}' | awk 'NR==2')
